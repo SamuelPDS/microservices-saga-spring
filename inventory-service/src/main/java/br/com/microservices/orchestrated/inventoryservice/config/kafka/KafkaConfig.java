@@ -1,4 +1,4 @@
-package br.com.microservices.orchestrated.orderservice.config.kafka;
+package br.com.microservices.orchestrated.inventoryservice.config.kafka;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -34,32 +34,29 @@ public class KafkaConfig {
     }
 
     private Map<String, Object> consumerProps() {
-        HashMap<String, Object> props = new HashMap<String, Object>();
+        HashMap<String, Object> props =  new HashMap<String, Object>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapService);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        //Para consumer deve-se utilizar um desserializar os dados que estão vindo do tópico
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         return props;
     }
 
-    @Bean
     public ProducerFactory<String, String> producerFactory() {
         return new DefaultKafkaProducerFactory<>(producerProps());
     }
 
     private Map<String, Object> producerProps() {
-        HashMap<String, Object> props = new HashMap<String, Object>();
+        HashMap<String, Object> props =  new HashMap<String, Object>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapService);
-        //Para producer, deve-se utilizar um serializar os dados que estão sendo enviados do tópico
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         return props;
     }
 
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
+    KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 }

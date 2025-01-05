@@ -1,4 +1,4 @@
-package br.com.microservices.orchestrated.orderservice.config.kafka;
+package br.com.microservices.orchestrated.productvalidationservice.config.kafka;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -18,7 +18,6 @@ import java.util.Map;
 @Configuration
 @RequiredArgsConstructor
 public class KafkaConfig {
-
     @Value("${spring.kafka.bootstrap-serves}")
     private String bootstrapService;
 
@@ -62,4 +61,5 @@ public class KafkaConfig {
     public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
+
 }
