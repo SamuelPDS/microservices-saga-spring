@@ -32,7 +32,6 @@ class TesteServiceTest {
         when(testeService.simpleSum(num1,num2)).thenReturn(9);
 
         assertEquals(testeService.simpleSum(num1,num2), sum);
-       //       when()
     }
 
     @Test
