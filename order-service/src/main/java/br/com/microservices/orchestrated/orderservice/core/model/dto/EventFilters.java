@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventsFilters {
+public class EventFilters {
 
     private String orderId;
     private String transactionId;
