@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/curso-microservices-saga.iml" filepath="$PROJECT_DIR$/.idea/curso-microservices-saga.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/orchestrator-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/orchestrator-service.main.iml" />
     </modules>
   </component>
 </project>
