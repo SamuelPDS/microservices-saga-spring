@@ -30,7 +30,7 @@ public class OrderService {
                 .products(orderRequest.getProducts())
                 .createdAt(LocalDateTime.now())
                 .transactionId(
-                        String.format(TRANSACTIONAL_ID_PATTERN, Instant.now(), UUID.randomUUID())
+                        String.format(TRANSACTIONAL_ID_PATTERN, Instant.now().toEpochMilli(), UUID.randomUUID())
                 )
                 .build();
 
