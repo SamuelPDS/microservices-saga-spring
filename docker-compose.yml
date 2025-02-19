@@ -9,8 +9,8 @@ services:
     networks:
       - orchestrator-saga
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: 123456
     ports:
       - 27017:27017
 
@@ -99,7 +99,7 @@ services:
       - orchestrator-saga
     environment:
       - KAFKA_BROKER=kafka:29092
-      - MONGO_DB_URI=mongodb://root:root@order-db:27017
+      - MONGO_DB_URI=mongodb://admin:123456@order-db:27017
     ports:
       - 3000:3000
 
