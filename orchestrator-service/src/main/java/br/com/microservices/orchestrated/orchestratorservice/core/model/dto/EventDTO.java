@@ -23,6 +23,6 @@ public class EventDTO {
     private OrderDTO payload;
     private EEventSource source;
     private ESagaStatus status;
-    private List<HistoryDTO> eventHistoryDTO;
+    private List<HistoryDTO> eventHistory;
     private LocalDateTime createdAt;
 }

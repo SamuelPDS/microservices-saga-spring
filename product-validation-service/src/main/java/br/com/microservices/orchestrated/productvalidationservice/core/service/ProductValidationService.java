@@ -13,7 +13,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import static br.com.microservices.orchestrated.productvalidationservice.core.enums.ESagaStatus.SUCCESS;
+import java.time.LocalDateTime;
+
+import static br.com.microservices.orchestrated.productvalidationservice.core.enums.ESagaStatus.*;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 
@@ -37,6 +39,7 @@ public class ProductValidationService {
             log.error("Error trying to validade Product: ", e);
             handleFailCurrentNotExecuted(event, e.getMessage());
         }
+        producer.sendEvent(jsonUtil.toJson(event));
     }
 
     private void validateProductsInformed(EventDTO event) {
@@ -58,12 +61,12 @@ public class ProductValidationService {
 
         event.getPayload().getProducts().forEach(product -> {
             validateProductInformed(product);
-            validateExistingProduct(product.getProductDTO().getCode());
+            validateExistingProduct(product.getProduct().getCode());
         });
     }
 
     private void validateProductInformed(OrderProductsDTO product) {
-        if (isEmpty(product.getProductDTO()) || isEmpty(product.getProductDTO().getCode())) {
+        if (isEmpty(product.getProduct()) || isEmpty(product.getProduct().getCode())) {
             throw new ValidationException("Product must be informed!");
         }
     }
@@ -88,17 +91,43 @@ public class ProductValidationService {
     private void handleSuccess(EventDTO event) {
         event.setStatus(SUCCESS);
         event.setSource(CURRENT_SOURCE);
-        addHistory(event);
+        addHistory(event, "products validated succssfully!");
     }
 
-    private void addHistory(EventDTO event) {
+    private void addHistory(EventDTO event, String message) {
         HistoryDTO history = HistoryDTO
                 .builder()
                 .source(event.getSource())
                 .status(event.getStatus())
-                .message("products validated succssfully!")
+                .createdAt(LocalDateTime.now())
+                .message(message)
                 .build();
 
         event.addToHistory(history);
     }
+
+
+    private void handleFailCurrentNotExecuted(EventDTO event, String message) {
+        event.setStatus(ROLLBACK_PENDING);
+        event.setSource(CURRENT_SOURCE);
+        addHistory(event,"Failed to validate products: ".concat(message));
+    }
+
+    public void rollbackEvent(EventDTO event) {
+        changeValidationToFail(event);
+        event.setStatus(FAIL);
+        event.setSource(CURRENT_SOURCE);
+        addHistory(event, "Rollback executed on product validation!");
+        producer.sendEvent(jsonUtil.toJson(event));
+    }
+
+    private void changeValidationToFail(EventDTO event) {
+    validationRepository
+        .findByOrderIdAndTransactionId(event.getOrderId(), event.getTransactionId())
+        .ifPresentOrElse(validation -> {
+            validationRepository.save(validation.updateToFail(validation));
+        },
+        () -> createValidation(event, false));
+    }
+
 }

@@ -23,14 +23,14 @@ public class EventDTO {
     private OrderDTO payload;
     private String source;
     private ESagaStatus status;
-    private List<HistoryDTO> eventHistoryDTO;
+    private List<HistoryDTO> eventHistory;
     private LocalDateTime createdAt;
 
     public void addToHistory(HistoryDTO history) {
-        if(isEmpty(eventHistoryDTO)) {
-            eventHistoryDTO = new ArrayList<>();
+        if(isEmpty(eventHistory)) {
+            eventHistory = new ArrayList<>();
         }
 
-        eventHistoryDTO.add(history);
+        eventHistory.add(history);
     }
 }

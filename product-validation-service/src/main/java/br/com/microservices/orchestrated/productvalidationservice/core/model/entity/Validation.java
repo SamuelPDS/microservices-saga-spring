@@ -1,10 +1,8 @@
 package br.com.microservices.orchestrated.productvalidationservice.core.model.entity;
 
+import br.com.microservices.orchestrated.productvalidationservice.core.model.dto.EventDTO;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -45,5 +43,10 @@ public class Validation {
     @PreUpdate
     public void preUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public Validation updateToFail(Validation entity) {
+        entity.setSuccess(false);
+        return entity;
     }
 }
