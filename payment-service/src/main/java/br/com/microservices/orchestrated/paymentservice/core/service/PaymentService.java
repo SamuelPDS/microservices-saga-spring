@@ -121,6 +121,12 @@ public class PaymentService {
         addHistory(event, "Fail to realize the payment: ".concat(errorMessage));
     }
 
+    private void handleSuccess(EventDTO event) {
+        event.setStatus(SUCCESS);
+        event.setSource(CURRENT_SOURCE);
+        addHistory(event, "payment realized successfully!");
+    }
+
     private void addHistory(EventDTO event, String messsage) {
         HistoryDTO history = HistoryDTO
                 .builder()
@@ -148,10 +154,4 @@ public class PaymentService {
         payment.setStatus(SUCESS);
         save(payment);
     };
-
-    private void handleSuccess(EventDTO event) {
-        event.setStatus(SUCCESS);
-        event.setSource(CURRENT_SOURCE);
-        addHistory(event, "payment realized successfully!");
-    }
 }
