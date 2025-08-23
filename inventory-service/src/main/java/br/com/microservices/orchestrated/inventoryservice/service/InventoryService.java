@@ -3,6 +3,8 @@ package br.com.microservices.orchestrated.inventoryservice.service;
 import br.com.microservices.orchestrated.inventoryservice.config.exception.ValidationException;
 import br.com.microservices.orchestrated.inventoryservice.core.kafka.producer.KafkaProducer;
 import br.com.microservices.orchestrated.inventoryservice.core.model.dto.EventDTO;
+import br.com.microservices.orchestrated.inventoryservice.core.model.dto.HistoryDTO;
+import br.com.microservices.orchestrated.inventoryservice.core.model.dto.OrderDTO;
 import br.com.microservices.orchestrated.inventoryservice.core.model.dto.OrderProductsDTO;
 import br.com.microservices.orchestrated.inventoryservice.core.model.entity.Inventory;
 import br.com.microservices.orchestrated.inventoryservice.core.model.entity.OrderInventory;
@@ -13,6 +15,10 @@ import br.com.microservices.orchestrated.inventoryservice.core.utils.JsonUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
+import static br.com.microservices.orchestrated.inventoryservice.core.enums.ESagaStatus.*;
 
 @Slf4j
 @Service
@@ -29,12 +35,31 @@ public class InventoryService {
         try  {
             checkCurrentValidation(event);
             createOrderInventory(event);
+            updateInventory(event.getPayload());
+            handleSuccess(event);
         } catch (Exception ex) {
             log.error("Error trying to update inventory: ", ex);
-//            handleFailCurrentNotExecuted(event, ex.getMessage());
+            handleFailCurrentNotExecuted(event, ex.getMessage());
         }
 
         producer.sendEvent(jsonUtil.toJson(event));
+    }
+
+    private void updateInventory(OrderDTO order) {
+        order
+            .getProducts()
+            .forEach(product -> {
+                var inventory = findByProductCode(product.getProduct().getCode());
+                checkInventory(inventory.getAvailable(), product.getQuantity());
+                inventory.setAvailable(inventory.getAvailable() - product.getQuantity());
+                inventoryRepository.save(inventory);
+            });
+    }
+
+    private void checkInventory(int avaliable, int orderQuantity) {
+        if (avaliable < orderQuantity) {
+            throw new ValidationException("Insufficient inventory for the product");
+        }
     }
 
     private void checkCurrentValidation(EventDTO event) {
@@ -49,7 +74,7 @@ public class InventoryService {
             .getPayload()
             .getProducts()
             .forEach(product -> {
-                var inventory = findByProductCode(product.getProductDTO().getCode());
+                var inventory = findByProductCode(product.getProduct().getCode());
                 var orderInventory = createOrderInventory(event, product, inventory);
                 orderInventoryRepository.save(orderInventory);
 
@@ -70,6 +95,54 @@ public class InventoryService {
 
     private Inventory findByProductCode(String productCode) {
         return inventoryRepository.findByProductCode(productCode)
-                .orElseThrow(() -> new ValidationException("Product not found in inventory: " + productCode));
+                .orElseThrow(() -> new ValidationException("Product not founded in inventory: " + productCode));
+    }
+
+
+    private void handleSuccess(EventDTO event) {
+        event.setStatus(SUCCESS);
+        event.setSource(CURRENT_SOURCE);
+        addHistory(event, "Inventory successfully updated!");
+    }
+
+    private void addHistory(EventDTO event, String messsage) {
+        HistoryDTO history = HistoryDTO
+                .builder()
+                .source(event.getSource())
+                .status(event.getStatus())
+                .message(messsage)
+                .createdAt(LocalDateTime.now())
+                .build();
+        event.addToHistory(history);
+    }
+
+    private void handleFailCurrentNotExecuted(EventDTO event, String errorMessage) {
+        event.setStatus(ROLLBACK_PENDING);
+        event.setSource(CURRENT_SOURCE);
+        addHistory(event, "Fail to update inventory: ".concat(errorMessage));
+    }
+
+    public void rollbackInventory(EventDTO event) {
+        event.setStatus(FAIL);
+        event.setSource(CURRENT_SOURCE);
+        try {
+            returnInventoryToPreviousValue(event);
+            addHistory(event, "Rollback executed for inventory!");
+        } catch (Exception e) {
+            addHistory(event, "Rollback not excuted for inventory: ".concat(e.getMessage()));
+        }
+        producer.sendEvent(jsonUtil.toJson(event));
+    }
+
+    private void returnInventoryToPreviousValue(EventDTO event) {
+        orderInventoryRepository
+                .findByOrderIdAndTransactionId(event.getOrderId(),
+                event.getTransactionId())
+                .forEach(order -> {
+                    var inventory = order.getInventory();
+                    inventory.setAvailable(order.getOldQuantity());
+                    inventoryRepository.save(inventory);
+                 log.info("Restored inventory for order {} from {} to {} ", event.getPayload().getId(), order.getNewQuantity(), inventory.getAvailable());
+                });
     }
 }
