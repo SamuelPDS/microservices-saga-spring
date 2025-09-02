@@ -16,7 +16,7 @@ public enum ETopics {
     PRODUCT_VALIDATION_FAIL("product-validation-fail"),
     PAYMENT_SUCCESS("payment-success"),
     PAYMENT_FAIL("payment-fail"),
-    INVENTORY_SUCESS("inventory-success"),
+    INVENTORY_SUCCESS("inventory-success"),
     INVENTORY_FAIL("inventory-fail"),
     NOTIFY_ENDING("notify-ending");
 

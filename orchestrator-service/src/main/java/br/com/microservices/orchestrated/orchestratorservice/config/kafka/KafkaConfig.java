@@ -116,7 +116,7 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic inventorySucessTopic() {
-        return buildTopic(INVENTORY_SUCESS.getTopics());
+        return buildTopic(INVENTORY_SUCCESS.getTopics());
     }
 
     @Bean
