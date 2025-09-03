@@ -16,7 +16,7 @@ import static org.springframework.util.ObjectUtils.isEmpty;
 @Slf4j
 @Component
 @AllArgsConstructor
-public class SagaHandlerController {
+public class SagaExecutionController {
     private static final String SAGA_LOG_ID = "ORDER ID: %s | TRANSACTION ID %s | EVENT ID %s";
 
     public ETopics getNextTopic(EventDTO event) {
